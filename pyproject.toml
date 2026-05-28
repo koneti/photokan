@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "photokan"
+version = "0.4.0"
+description = "Photonic KAN: Vendor-agnostic PyTorch + KAN framework for photonic AI hardware"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.1.0",
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "sympy>=1.12",
+    "matplotlib>=3.7",
+]
+
+[project.optional-dependencies]
+qant = ["qpal"]
+lightmatter = ["lightmatter"]
+salience = ["salience"]
+llm  = ["transformers>=4.40", "peft"]
+onnx = ["onnxscript", "onnxruntime"]
+dev  = ["pytest>=7.0", "pytest-cov", "black", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["photokan*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+markers = ["slow: mark test as slow", "npu: requires Q.ANT hardware"]
