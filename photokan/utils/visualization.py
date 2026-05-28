@@ -3,16 +3,15 @@
 
 from __future__ import annotations
 
-import torch
 import numpy as np
+import torch
 
 
-def plot_kan_graph(model) -> "matplotlib.figure.Figure":
+def plot_kan_graph(model):
     """
     Visualise the KAN computation graph with edge function thumbnails.
     """
     import matplotlib.pyplot as plt
-    import matplotlib.gridspec as gridspec
 
     layer_sizes = model.layer_sizes
     n_layers = len(layer_sizes) - 1
@@ -26,17 +25,19 @@ def plot_kan_graph(model) -> "matplotlib.figure.Figure":
     ax.set_title("PhotoKAN Computation Graph", fontsize=14, fontweight="bold")
 
     x_np = np.linspace(-2, 2, 50)
-    x_t  = torch.tensor(x_np, dtype=torch.float32)
+    x_t = torch.tensor(x_np, dtype=torch.float32)
 
     for l, layer in enumerate(model.layers):
-        in_n  = layer.in_features
+        in_n = layer.in_features
         out_n = layer.out_features
 
         for i in range(in_n):
             for j in range(out_n):
                 # Node positions
-                x1 = l;     y1 = i + (max(layer_sizes) - in_n)  / 2
-                x2 = l + 1; y2 = j + (max(layer_sizes) - out_n) / 2
+                x1 = l
+                y1 = i + (max(layer_sizes) - in_n) / 2
+                x2 = l + 1
+                y2 = j + (max(layer_sizes) - out_n) / 2
 
                 activation = layer.edge_activations[layer._edge_idx(i, j)]
                 with torch.no_grad():
@@ -47,25 +48,23 @@ def plot_kan_graph(model) -> "matplotlib.figure.Figure":
 
                 # Mini sparkline inset
                 mx, my = (x1 + x2) / 2, (y1 + y2) / 2
-                y_norm = (y_vals - y_vals.min()) / (y_vals.ptp() + 1e-8) * 0.4 - 0.2
+                y_norm = (y_vals - y_vals.min()) / (np.ptp(y_vals) + 1e-8) * 0.4 - 0.2
                 x_norm = np.linspace(mx - 0.2, mx + 0.2, len(y_norm))
                 ax.plot(x_norm, my + y_norm, "b-", alpha=0.6, linewidth=1.2)
 
         # Draw nodes
         for i in range(layer_sizes[l]):
             y_pos = i + (max(layer_sizes) - layer_sizes[l]) / 2
-            ax.plot(l, y_pos, "o", markersize=14,
-                    color="steelblue", zorder=5)
-            ax.text(l, y_pos, str(i), ha="center", va="center",
-                    color="white", fontsize=8, zorder=6)
+            ax.plot(l, y_pos, "o", markersize=14, color="steelblue", zorder=5)
+            ax.text(l, y_pos, str(i), ha="center", va="center", color="white", fontsize=8, zorder=6)
 
     # Draw output nodes
     for i in range(layer_sizes[-1]):
         y_pos = i + (max(layer_sizes) - layer_sizes[-1]) / 2
-        ax.plot(n_layers, y_pos, "o", markersize=14,
-                color="tomato", zorder=5)
-        ax.text(n_layers, y_pos, str(i), ha="center", va="center",
-                color="white", fontsize=8, zorder=6)
+        ax.plot(n_layers, y_pos, "o", markersize=14, color="tomato", zorder=5)
+        ax.text(
+            n_layers, y_pos, str(i), ha="center", va="center", color="white", fontsize=8, zorder=6
+        )
 
     fig.tight_layout()
     return fig
@@ -102,7 +101,7 @@ def plot_activation_grid(model, x_range: tuple = (-2.0, 2.0)):
         ax.tick_params(labelsize=6)
         ax.grid(alpha=0.3)
 
-    for ax in axes[len(activations):]:
+    for ax in axes[len(activations) :]:
         ax.axis("off")
 
     fig.suptitle("PhotoKAN Edge Activations", fontsize=12, fontweight="bold")

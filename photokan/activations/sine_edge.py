@@ -12,6 +12,7 @@ of the compute cost for periodic/quasi-periodic targets.
 from __future__ import annotations
 
 import math
+
 import torch
 import torch.nn as nn
 
@@ -54,14 +55,11 @@ class SineEdgeActivation(EdgeActivation):
             freqs = torch.rand(n_basis) * n_basis + 1.0
         else:
             raise ValueError(
-                f"Unknown freq_init '{freq_init}'. "
-                "Choose 'uniform', 'log', or 'random'."
+                f"Unknown freq_init '{freq_init}'. Choose 'uniform', 'log', or 'random'."
             )
 
         self.frequencies = nn.Parameter(freqs, requires_grad=trainable_freq)
-        self.phases = nn.Parameter(
-            torch.zeros(n_basis), requires_grad=trainable_phase
-        )
+        self.phases = nn.Parameter(torch.zeros(n_basis), requires_grad=trainable_phase)
         self.weights = nn.Parameter(torch.randn(n_basis) * 0.1)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -72,11 +70,9 @@ class SineEdgeActivation(EdgeActivation):
         Returns:
             [...] same shape as x.
         """
-        x_exp = x.unsqueeze(-1)                            # [..., 1]
-        basis = torch.sin(
-            self.frequencies * x_exp + self.phases
-        )                                                   # [..., n_basis]
-        return (basis * self.weights).sum(dim=-1)           # [...]
+        x_exp = x.unsqueeze(-1)  # [..., 1]
+        basis = torch.sin(self.frequencies * x_exp + self.phases)  # [..., n_basis]
+        return (basis * self.weights).sum(dim=-1)  # [...]
 
     def extra_repr(self) -> str:
         return (

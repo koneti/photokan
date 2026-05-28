@@ -9,9 +9,11 @@ TensorRT, CoreML, or any other ONNX-compatible backend.
 Note: exported model runs the CPU/GPU forward path (no photonic ops).
 Use PhotonicCompiler for Q.PAL hardware deployment.
 """
+
 from __future__ import annotations
 
 import os
+
 import torch
 
 
@@ -59,9 +61,7 @@ def export_onnx(
         elif hasattr(model, "in_features"):
             in_f = model.in_features
         else:
-            raise ValueError(
-                "Cannot infer input shape. Pass input_shape=(n_features,) explicitly."
-            )
+            raise ValueError("Cannot infer input shape. Pass input_shape=(n_features,) explicitly.")
         input_shape = (in_f,)
 
     # Disable noise for export (deterministic graph)

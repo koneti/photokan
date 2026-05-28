@@ -1,11 +1,11 @@
 """Tests for SplineEdgeActivation."""
+
 import torch
-import pytest
+
 from photokan.activations import SplineEdgeActivation
 
 
 class TestSplineEdgeActivation:
-
     def test_output_shape(self):
         act = SplineEdgeActivation(grid_size=5, spline_order=3)
         x = torch.randn(16)

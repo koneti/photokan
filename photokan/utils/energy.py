@@ -18,21 +18,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 # Energy per MAC operation in picojoules
-_CMOS_MAC_PJ = 3.7        # 40nm CMOS reference
-_PHOTONIC_MAC_PJ = 0.12   # Q.ANT TFLN claim (~30x improvement)
+_CMOS_MAC_PJ = 3.7  # 40nm CMOS reference
+_PHOTONIC_MAC_PJ = 0.12  # Q.ANT TFLN claim (~30x improvement)
 
 # Overhead multipliers per activation type
 _ACTIVATION_ENERGY: dict[str, float] = {
-    "sine": 1.0,       # Direct optical — baseline
-    "fourier": 1.2,    # Extra cosine component
-    "spline": 1.5,     # LUT access overhead
-    "relu": 0.8,       # Simplest op
+    "sine": 1.0,  # Direct optical — baseline
+    "fourier": 1.2,  # Extra cosine component
+    "spline": 1.5,  # LUT access overhead
+    "relu": 0.8,  # Simplest op
 }
 
 
 @dataclass
 class EnergyReport:
     """Energy estimation results."""
+
     n_edges: int
     n_ops_per_edge: int
     total_ops: int

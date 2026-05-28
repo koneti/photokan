@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import torch
 
-from ..backend.sim_backend import SimBackend, HARDWARE_PROFILES
+from ..backend.sim_backend import HARDWARE_PROFILES, SimBackend
 
 
 class PhotonicSimulator:
@@ -86,7 +86,7 @@ class PhotonicSimulator:
             snr_range = [8.0, 10.0, 12.0, 14.0, 16.0, 20.0]
 
         # Collect layers to sweep — works for both PhotoKAN and PhotoKANLayer
-        if hasattr(model, 'layers'):
+        if hasattr(model, "layers"):
             layers = model.layers
         else:
             layers = [model]
@@ -111,9 +111,7 @@ class PhotonicSimulator:
                             torch.nn.functional.mse_loss(pred.squeeze(), y_true.squeeze())
                         )
                     elif metric == "mae":
-                        score = float(
-                            torch.nn.functional.l1_loss(pred.squeeze(), y_true.squeeze())
-                        )
+                        score = float(torch.nn.functional.l1_loss(pred.squeeze(), y_true.squeeze()))
                     else:
                         raise ValueError(f"Unknown metric '{metric}'.")
                 else:
@@ -154,8 +152,13 @@ class PhotonicSimulator:
 
         fig, ax = plt.subplots(figsize=(6, 4))
         ax.plot(x, y_ideal, label="Ideal φ(x)", linewidth=2)
-        ax.plot(x, y_noisy, label=f"Simulated (SNR={self._noise_config['snr_db']:.0f} dB)",
-                alpha=0.7, linestyle="--")
+        ax.plot(
+            x,
+            y_noisy,
+            label=f"Simulated (SNR={self._noise_config['snr_db']:.0f} dB)",
+            alpha=0.7,
+            linestyle="--",
+        )
         ax.set_xlabel("x")
         ax.set_ylabel("φ(x)")
         ax.set_title(f"Transfer function: {type(activation).__name__}")

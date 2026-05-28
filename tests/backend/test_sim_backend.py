@@ -1,12 +1,13 @@
 """Tests for SimBackend and NoiseModel — updated for 0.2.0 API."""
-import torch
+
 import pytest
-from photokan.backend import SimBackend, NoiseModel
+import torch
+
 from photokan.activations import SineEdgeActivation
+from photokan.backend import NoiseModel, SimBackend
 
 
 class TestNoiseModel:
-
     def test_noise_changes_output(self):
         nm = NoiseModel(snr_db=6.0, bit_depth=4, enabled=True)
         x = torch.linspace(-1, 1, 64)
@@ -25,7 +26,6 @@ class TestNoiseModel:
 
 
 class TestSimBackend:
-
     def test_forward_shape(self):
         act = SineEdgeActivation(n_basis=4)
         x = torch.randn(16)
@@ -35,10 +35,11 @@ class TestSimBackend:
     def test_forward_without_noise_matches_activation(self):
         act = SineEdgeActivation(n_basis=4)
         x = torch.randn(16)
-        y_sim = SimBackend.forward(x, act, noise_config={"enabled": False,
-                                                          "snr_db": 14.0,
-                                                          "bit_depth": 6,
-                                                          "phase_noise_rad": 0.0})
+        y_sim = SimBackend.forward(
+            x,
+            act,
+            noise_config={"enabled": False, "snr_db": 14.0, "bit_depth": 6, "phase_noise_rad": 0.0},
+        )
         y_act = act(x)
         assert torch.allclose(y_sim, y_act, atol=1e-5)
 

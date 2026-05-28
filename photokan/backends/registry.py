@@ -46,8 +46,7 @@ def get_backend(name: str) -> type[PhotonicBackend]:
     """Return a vendor backend class by name."""
     if name not in _VENDOR_BACKENDS:
         raise PhotonicBackendError(
-            f"Unknown backend '{name}'. "
-            f"Registered: {list(_VENDOR_BACKENDS.keys())}"
+            f"Unknown backend '{name}'. Registered: {list(_VENDOR_BACKENDS.keys())}"
         )
     return _VENDOR_BACKENDS[name]
 
@@ -78,8 +77,7 @@ def get_noise_config(backend_name: str, profile: str) -> dict:
     """Get a noise profile from a specific vendor backend."""
     if backend_name not in _VENDOR_BACKENDS:
         raise PhotonicBackendError(
-            f"Unknown backend '{backend_name}'. "
-            f"Registered: {list(_VENDOR_BACKENDS.keys())}"
+            f"Unknown backend '{backend_name}'. Registered: {list(_VENDOR_BACKENDS.keys())}"
         )
     profiles = _VENDOR_BACKENDS[backend_name].noise_profiles()
     if profile not in profiles:
@@ -98,6 +96,7 @@ def all_vendor_names() -> list[str]:
 # ---------------------------------------------------------------------------
 # Auto-discover vendor backends
 # ---------------------------------------------------------------------------
+
 
 def _discover_vendors() -> None:
     """Import vendor modules to trigger their register_vendor() calls."""

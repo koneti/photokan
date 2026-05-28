@@ -1,6 +1,6 @@
 # photokan/layers/__init__.py
-from .photokan_layer import PhotoKANLayer
-from .photokan import PhotoKAN
 from .conv_kan import PhotoConvKAN
+from .photokan import PhotoKAN
+from .photokan_layer import PhotoKANLayer
 
-__all__ = ["PhotoKANLayer", "PhotoKAN", "PhotoConvKAN"]
+__all__ = ["PhotoConvKAN", "PhotoKAN", "PhotoKANLayer"]

@@ -2,9 +2,11 @@
 """Symbolic regression utilities for KAN edge functions."""
 
 from __future__ import annotations
+
 from typing import Any
-import torch
+
 import numpy as np
+import torch
 
 
 def symbolic_regress_activation(
@@ -27,8 +29,8 @@ def symbolic_regress_activation(
         y_np = activation(x_t).numpy()
 
     try:
-        from scipy.optimize import curve_fit
         import sympy as sp
+        from scipy.optimize import curve_fit
 
         x_sym = sp.Symbol("x")
         best_expr = None
@@ -36,10 +38,10 @@ def symbolic_regress_activation(
 
         # Candidate library
         candidates = [
-            ("linear",     lambda x, a, b: a * x + b,               [1.0, 0.0]),
-            ("quadratic",  lambda x, a, b, c: a*x**2 + b*x + c,     [1.0, 0.0, 0.0]),
-            ("sine",       lambda x, a, b, c: a*np.sin(b*x + c),     [1.0, 1.0, 0.0]),
-            ("exp",        lambda x, a, b: a*np.exp(b*x),            [1.0, 0.1]),
+            ("linear", lambda x, a, b: a * x + b, [1.0, 0.0]),
+            ("quadratic", lambda x, a, b, c: a * x**2 + b * x + c, [1.0, 0.0, 0.0]),
+            ("sine", lambda x, a, b, c: a * np.sin(b * x + c), [1.0, 1.0, 0.0]),
+            ("exp", lambda x, a, b: a * np.exp(b * x), [1.0, 0.1]),
         ]
 
         for name, fn, p0 in candidates:
@@ -58,8 +60,7 @@ def symbolic_regress_activation(
 
     except ImportError:
         # Fallback: describe the activation params
-        params = {k: v.detach().numpy().tolist()
-                  for k, v in activation.named_parameters()}
+        params = {k: v.detach().numpy().tolist() for k, v in activation.named_parameters()}
         return f"{type(activation).__name__}(params={params})"
 
 

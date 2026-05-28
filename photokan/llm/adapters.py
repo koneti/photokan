@@ -14,11 +14,11 @@ Architecture per targeted Linear layer W (d_in × d_out):
 
 where KAN_A: d_in → rank, KAN_B: rank → d_out.
 """
+
 from __future__ import annotations
 
-import math
 import warnings
-from typing import Iterable
+
 import torch
 import torch.nn as nn
 
@@ -43,15 +43,15 @@ class PhotoLoRALinear(nn.Module):
         noise_sim: bool = False,
     ):
         super().__init__()
-        self.base   = base_linear
-        self.scale  = scale
-        self.rank   = rank
+        self.base = base_linear
+        self.scale = scale
+        self.rank = rank
 
         # Freeze base weights
         for p in self.base.parameters():
             p.requires_grad_(False)
 
-        in_f  = base_linear.in_features
+        in_f = base_linear.in_features
         out_f = base_linear.out_features
 
         # KAN adapter: d_in → rank → d_out
@@ -68,7 +68,7 @@ class PhotoLoRALinear(nn.Module):
             nn.init.normal_(p, std=0.01)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        base_out    = self.base(x)
+        base_out = self.base(x)
         adapter_out = self.adapter(x)
         return base_out + self.scale * adapter_out
 
@@ -84,7 +84,7 @@ class PhotoLoRALinear(nn.Module):
             "Use compile_photokan_layers() for exact photonic deployment.",
             stacklevel=2,
         )
-        in_f  = self.base.in_features
+        in_f = self.base.in_features
         out_f = self.base.out_features
         merged = nn.Linear(in_f, out_f, bias=self.base.bias is not None)
         merged.weight.data = self.base.weight.data.clone()
@@ -165,9 +165,11 @@ def add_photo_lora(
     print(f"[photokan.llm] Added PhotoLoRA adapters to {replaced} Linear module(s).")
 
     # Report trainable parameters
-    total  = sum(p.numel() for p in model.parameters())
+    total = sum(p.numel() for p in model.parameters())
     trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    print(f"[photokan.llm] Trainable: {trainable:,} / {total:,} "
-          f"({100*trainable/max(total,1):.2f}%)")
+    print(
+        f"[photokan.llm] Trainable: {trainable:,} / {total:,} "
+        f"({100 * trainable / max(total, 1):.2f}%)"
+    )
 
     return model

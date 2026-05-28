@@ -7,20 +7,20 @@ sublayers (GPT-2, LLaMA, Mistral, Falcon patterns) and swaps them
 out with PhotoKANLayer stacks, preserving residual connections and
 model interfaces.
 """
+
 from __future__ import annotations
 
-import re
 import warnings
-from typing import Callable
+
 import torch
 import torch.nn as nn
 
-from ..layers import PhotoKAN, PhotoKANLayer
-
+from ..layers import PhotoKAN
 
 # ---------------------------------------------------------------------------
 # Known FFN module patterns per model family
 # ---------------------------------------------------------------------------
+
 
 def _get_mlp_modules(model) -> list[tuple[str, nn.Module]]:
     """
@@ -33,15 +33,19 @@ def _get_mlp_modules(model) -> list[tuple[str, nn.Module]]:
     for name, module in model.named_modules():
         cls_name = type(module).__name__
         # HuggingFace naming conventions
-        if cls_name in ("GPT2MLP", "LlamaMLP", "MistralMLP", "FalconMLP",
-                        "MistralMLP", "PhiMLP", "GemmaMLP"):
+        if cls_name in (
+            "GPT2MLP",
+            "LlamaMLP",
+            "MistralMLP",
+            "FalconMLP",
+            "MistralMLP",
+            "PhiMLP",
+            "GemmaMLP",
+        ):
             candidates.append((name, module))
         elif "mlp" in name.lower() and isinstance(module, nn.Module):
             # Generic: any module named *mlp* that contains linear layers
-            has_linear = any(
-                isinstance(m, nn.Linear)
-                for m in module.children()
-            )
+            has_linear = any(isinstance(m, nn.Linear) for m in module.children())
             if has_linear and name not in [n for n, _ in candidates]:
                 candidates.append((name, module))
     return candidates
@@ -52,7 +56,7 @@ def _infer_mlp_dims(mlp_module: nn.Module) -> tuple[int, int]:
     linears = [m for m in mlp_module.modules() if isinstance(m, nn.Linear)]
     if not linears:
         raise ValueError(f"No Linear layers found in {type(mlp_module).__name__}")
-    in_features  = linears[0].in_features
+    in_features = linears[0].in_features
     out_features = linears[-1].out_features
     return in_features, out_features
 
@@ -68,6 +72,7 @@ def _set_nested_attr(obj, attr_path: str, value):
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 def replace_mlp_with_photokan(
     model: nn.Module,
@@ -121,9 +126,7 @@ def replace_mlp_with_photokan(
     # Filter by layer index if specified
     if layers_to_replace is not None:
         mlp_modules = [
-            (name, mod)
-            for i, (name, mod) in enumerate(mlp_modules)
-            if i in layers_to_replace
+            (name, mod) for i, (name, mod) in enumerate(mlp_modules) if i in layers_to_replace
         ]
 
     replaced = 0
@@ -192,7 +195,7 @@ def compile_photokan_layers(
     from ..compiler import PhotonicCompiler
 
     compiler = PhotonicCompiler(**compiler_kwargs)
-    bundles  = {}
+    bundles = {}
 
     for name, module in model.named_modules():
         if isinstance(module, PhotoKAN):

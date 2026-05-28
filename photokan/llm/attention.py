@@ -16,9 +16,11 @@ to exploit photonic nonlinearity end-to-end.
 This is a research-grade implementation. For production use, evaluate
 accuracy carefully vs standard attention before deployment.
 """
+
 from __future__ import annotations
 
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -54,15 +56,17 @@ class PhotoKANAttention(nn.Module):
 
         assert d_model % n_heads == 0, "d_model must be divisible by n_heads"
 
-        self.d_model  = d_model
-        self.n_heads  = n_heads
-        self.d_head   = d_model // n_heads
-        self.scale    = math.sqrt(self.d_head)
-        self.dropout  = nn.Dropout(dropout)
+        self.d_model = d_model
+        self.n_heads = n_heads
+        self.d_head = d_model // n_heads
+        self.scale = math.sqrt(self.d_head)
+        self.dropout = nn.Dropout(dropout)
 
         common = dict(
-            activation=activation, backend=backend,
-            n_basis=n_basis, noise_sim=noise_sim,
+            activation=activation,
+            backend=backend,
+            n_basis=n_basis,
+            noise_sim=noise_sim,
         )
 
         # Photonic Q/K/V projections (nonlinear edge functions)
@@ -111,15 +115,13 @@ class PhotoKANAttention(nn.Module):
             scores = scores + attn_mask
 
         if key_padding_mask is not None:
-            scores = scores.masked_fill(
-                key_padding_mask.unsqueeze(1).unsqueeze(2), float("-inf")
-            )
+            scores = scores.masked_fill(key_padding_mask.unsqueeze(1).unsqueeze(2), float("-inf"))
 
         weights = F.softmax(scores, dim=-1)
         weights = self.dropout(weights)
 
-        attended = torch.matmul(weights, V)           # [B, H, T, d_head]
-        attended = attended.permute(0, 2, 1, 3)       # [B, T, H, d_head]
+        attended = torch.matmul(weights, V)  # [B, H, T, d_head]
+        attended = attended.permute(0, 2, 1, 3)  # [B, T, H, d_head]
         attended = attended.reshape(B, T, D)
 
         return self.out_proj(attended)

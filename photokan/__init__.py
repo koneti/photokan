@@ -6,34 +6,54 @@ PhotoKAN — Photonic Kolmogorov-Arnold Networks
 Vendor-agnostic photonic computing framework. Supports Q.ANT, Lightmatter,
 Salience Labs, and any future photonic hardware via pluggable backends.
 """
-from .layers import PhotoKANLayer, PhotoKAN, PhotoConvKAN
-from .backend import (
-    available_backends, resolve_backend, get_backend,
-    all_vendor_names, get_noise_config,
-    PhotonicBackendError, PhotonicCompilerError, PhotonicHardwareError,
+
+from .backend import NoiseModel, SimBackend, apply_edge
+from .backends import (
     PhotonicBackend,
+    PhotonicBackendError,
+    PhotonicCompilerError,
+    PhotonicHardwareError,
+    all_vendor_names,
+    available_backends,
+    get_backend,
+    get_noise_config,
+    resolve_backend,
 )
-from .backend.errors import PhotonicCompilerError, PhotonicHardwareError
-from .sim import PhotonicSimulator
 from .compiler import PhotonicCompiler, PhotonicProgram
+from .layers import PhotoConvKAN, PhotoKAN, PhotoKANLayer
+from .sim import PhotonicSimulator
 from .utils import (
-    Profiler, plot_kan_graph, estimate_model_energy,
-    gradcheck_activation, gradcheck_layer, export_onnx,
+    Profiler,
+    estimate_model_energy,
+    export_onnx,
+    gradcheck_activation,
+    gradcheck_layer,
+    plot_kan_graph,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 __all__ = [
-    "PhotoKAN", "PhotoKANLayer", "PhotoConvKAN",
-    "PhotonicSimulator",
-    "PhotonicCompiler", "PhotonicProgram",
-    "Profiler", "plot_kan_graph",
-    "estimate_model_energy",
-    "gradcheck_activation", "gradcheck_layer",
-    "export_onnx",
-    "available_backends", "resolve_backend",
-    "get_backend", "all_vendor_names", "get_noise_config",
+    "PhotoConvKAN",
+    "PhotoKAN",
+    "PhotoKANLayer",
     "PhotonicBackend",
-    "PhotonicBackendError", "PhotonicCompilerError", "PhotonicHardwareError",
+    "PhotonicBackendError",
+    "PhotonicCompiler",
+    "PhotonicCompilerError",
+    "PhotonicHardwareError",
+    "PhotonicProgram",
+    "PhotonicSimulator",
+    "Profiler",
     "__version__",
+    "all_vendor_names",
+    "available_backends",
+    "estimate_model_energy",
+    "export_onnx",
+    "get_backend",
+    "get_noise_config",
+    "gradcheck_activation",
+    "gradcheck_layer",
+    "plot_kan_graph",
+    "resolve_backend",
 ]

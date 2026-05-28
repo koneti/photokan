@@ -1,18 +1,19 @@
 """Tests for vendor-agnostic backend registry."""
+
 import pytest
+
 from photokan.backends import (
-    available_backends,
-    resolve_backend,
-    get_backend,
-    all_vendor_names,
-    get_noise_config,
     PhotonicBackendError,
+    all_vendor_names,
+    available_backends,
+    get_backend,
+    get_noise_config,
+    resolve_backend,
 )
 from photokan.backends.base import PhotonicBackend
 
 
 class TestBackendRegistry:
-
     def test_available_backends_returns_dict(self):
         backends = available_backends()
         assert isinstance(backends, dict)

@@ -2,23 +2,23 @@
 """Vendor-agnostic photonic backend layer."""
 
 from .base import PhotonicBackend
+from .errors import PhotonicBackendError, PhotonicCompilerError, PhotonicHardwareError
 from .registry import (
+    all_vendor_names,
     available_backends,
-    resolve_backend,
     get_backend,
     get_noise_config,
-    all_vendor_names,
+    resolve_backend,
 )
-from .errors import PhotonicBackendError, PhotonicCompilerError, PhotonicHardwareError
 
 __all__ = [
     "PhotonicBackend",
-    "available_backends",
-    "resolve_backend",
-    "get_backend",
-    "get_noise_config",
-    "all_vendor_names",
     "PhotonicBackendError",
     "PhotonicCompilerError",
     "PhotonicHardwareError",
+    "all_vendor_names",
+    "available_backends",
+    "get_backend",
+    "get_noise_config",
+    "resolve_backend",
 ]

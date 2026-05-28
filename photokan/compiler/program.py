@@ -17,28 +17,26 @@ import json
 import os
 import struct
 import time
-import warnings
-from typing import Any
 
 import numpy as np
 import torch
 
-from ..backend.errors import PhotonicCompilerError, PhotonicHardwareError
-from ..backend.qpal_backend import QPALBackend
+from ..backends.errors import PhotonicCompilerError, PhotonicHardwareError
+from ..backends.qant.backend import QANTBackend
+from .graph_builder import ExecGraph, QPALGraphBuilder
 from .lut_compiler import LUTCompiler, LUTEntry
-from .graph_builder import QPALGraphBuilder, ExecGraph
-
 
 # ---------------------------------------------------------------------------
 # Bundle format constants
 # ---------------------------------------------------------------------------
 BUNDLE_VERSION = "2.0"
-WEIGHTS_MAGIC  = b"PKAN"    # 4-byte file header for weights.bin
+WEIGHTS_MAGIC = b"PKAN"  # 4-byte file header for weights.bin
 
 
 # ---------------------------------------------------------------------------
 # PhotonicProgram
 # ---------------------------------------------------------------------------
+
 
 class PhotonicProgram:
     """
@@ -70,23 +68,21 @@ class PhotonicProgram:
         graph: ExecGraph | None = None,
         luts: list[list[LUTEntry]] | None = None,
     ):
-        self.path     = path
+        self.path = path
         self.metadata = metadata
-        self._graph   = graph      # kept in memory after compile
-        self._luts    = luts       # kept in memory after compile
+        self._graph = graph  # kept in memory after compile
+        self._luts = luts  # kept in memory after compile
 
     # ------------------------------------------------------------------
     # Persistence
     # ------------------------------------------------------------------
 
     @classmethod
-    def load(cls, path: str) -> "PhotonicProgram":
+    def load(cls, path: str) -> PhotonicProgram:
         """Load a compiled bundle from disk."""
         meta_path = os.path.join(path, "metadata.json")
         if not os.path.exists(meta_path):
-            raise FileNotFoundError(
-                f"Not a valid .npu bundle (missing metadata.json): {path}"
-            )
+            raise FileNotFoundError(f"Not a valid .npu bundle (missing metadata.json): {path}")
         with open(meta_path) as f:
             metadata = json.load(f)
         return cls(path, metadata)
@@ -98,7 +94,7 @@ class PhotonicProgram:
         if os.path.exists(graph_path):
             with open(graph_path) as f:
                 g = json.load(f)
-            info["n_ops"]       = len(g.get("nodes", []))
+            info["n_ops"] = len(g.get("nodes", []))
             info["n_slots_used"] = g.get("n_slots_used", 0)
         return info
 
@@ -121,15 +117,10 @@ class PhotonicProgram:
         Returns:
             Output tensor [batch, out_features].
         """
-        use_npu = (
-            backend in ("auto", "qpal")
-            and QPALBackend.is_available()
-        )
+        use_npu = backend in ("auto", "qpal") and QANTBackend.is_available()
 
         if backend == "qpal" and not use_npu:
-            raise PhotonicHardwareError(
-                "backend='qpal' requested but Q.ANT NPU is not available."
-            )
+            raise PhotonicHardwareError("backend='qpal' requested but Q.ANT NPU is not available.")
 
         if use_npu:
             return self._run_npu(x)
@@ -141,10 +132,8 @@ class PhotonicProgram:
         try:
             import qpal as _qpal  # type: ignore[import]
         except ImportError as exc:
-            raise PhotonicHardwareError(
-                "Q.PAL SDK not installed. Cannot run on NPU."
-            ) from exc
-        graph_path   = os.path.join(self.path, "op_graph.json")
+            raise PhotonicHardwareError("Q.PAL SDK not installed. Cannot run on NPU.") from exc
+        graph_path = os.path.join(self.path, "op_graph.json")
         weights_path = os.path.join(self.path, "weights.bin")
         return _qpal.run_bundle(x, graph_path, weights_path)
 
@@ -155,13 +144,12 @@ class PhotonicProgram:
         Loads LUTs from weights.bin and evaluates the model by
         linear interpolation within each LUT segment.
         """
-        graph_path   = os.path.join(self.path, "op_graph.json")
+        graph_path = os.path.join(self.path, "op_graph.json")
         weights_path = os.path.join(self.path, "weights.bin")
 
         if not os.path.exists(graph_path):
             raise FileNotFoundError(
-                "op_graph.json not found in bundle. "
-                "Re-compile with PhotonicCompiler."
+                "op_graph.json not found in bundle. Re-compile with PhotonicCompiler."
             )
 
         with open(graph_path) as f:
@@ -180,15 +168,15 @@ class PhotonicProgram:
 
         for l_idx in sorted(layers_by_idx.keys()):
             nodes = sorted(layers_by_idx[l_idx], key=lambda n: n["edge_idx"])
-            in_f  = layer_sizes[l_idx]
+            in_f = layer_sizes[l_idx]
             out_f = layer_sizes[l_idx + 1]
-            out   = torch.zeros(batch, out_f, dtype=current.dtype)
+            out = torch.zeros(batch, out_f, dtype=current.dtype)
 
             for node in nodes:
                 lut_entry = lut_store[node["lut_ref"]]
-                in_i  = node["in_node"]
+                in_i = node["in_node"]
                 out_j = node["out_node"]
-                phi   = _lut_interpolate(current[:, in_i], lut_entry)
+                phi = _lut_interpolate(current[:, in_i], lut_entry)
                 out[:, out_j] = out[:, out_j] + phi
 
             current = out
@@ -222,17 +210,17 @@ class PhotonicProgram:
             times_ms.append((time.perf_counter() - t0) * 1000)
 
         mean_ms = float(np.mean(times_ms))
-        std_ms  = float(np.std(times_ms))
+        std_ms = float(np.std(times_ms))
         throughput = x.shape[0] / (mean_ms / 1000)
 
         return {
-            "mean_ms":   round(mean_ms, 3),
-            "std_ms":    round(std_ms, 3),
-            "min_ms":    round(float(np.min(times_ms)), 3),
-            "max_ms":    round(float(np.max(times_ms)), 3),
+            "mean_ms": round(mean_ms, 3),
+            "std_ms": round(std_ms, 3),
+            "min_ms": round(float(np.min(times_ms)), 3),
+            "max_ms": round(float(np.max(times_ms)), 3),
             "throughput_samples_per_sec": round(throughput, 1),
-            "backend":   backend,
-            "n_runs":    n_runs,
+            "backend": backend,
+            "n_runs": n_runs,
             "batch_size": x.shape[0],
         }
 
@@ -240,6 +228,7 @@ class PhotonicProgram:
 # ---------------------------------------------------------------------------
 # PhotonicCompiler
 # ---------------------------------------------------------------------------
+
 
 class PhotonicCompiler:
     """
@@ -261,11 +250,11 @@ class PhotonicCompiler:
         n_npu_slots: int = 64,
         quantization: str = "int8",
     ):
-        self.n_lut_points  = n_lut_points
-        self.lut_x_range   = lut_x_range
-        self.max_lut_mse   = max_lut_mse
-        self.n_npu_slots   = n_npu_slots
-        self.quantization  = quantization
+        self.n_lut_points = n_lut_points
+        self.lut_x_range = lut_x_range
+        self.max_lut_mse = max_lut_mse
+        self.n_npu_slots = n_npu_slots
+        self.quantization = quantization
 
         self._lut_compiler = LUTCompiler(
             n_points=n_lut_points,
@@ -330,10 +319,7 @@ class PhotonicCompiler:
         base = model.estimate_ops()
 
         # Energy estimate using published Q.ANT figures
-        total_edges = sum(
-            layer.in_features * layer.out_features
-            for layer in model.layers
-        )
+        total_edges = sum(layer.in_features * layer.out_features for layer in model.layers)
         act = model.layers[0].edge_activations[0]
         ops_per_edge = sum(p.numel() for p in act.parameters())
         photonic_energy_uj = total_edges * ops_per_edge * 0.12e-6  # 0.12 pJ/op
@@ -375,8 +361,8 @@ class PhotonicCompiler:
 
         with open(os.path.join(path, "weights.bin"), "wb") as f:
             f.write(WEIGHTS_MAGIC)
-            f.write(struct.pack("<I", 2))               # version
-            f.write(struct.pack("<I", len(entries)))    # n_entries
+            f.write(struct.pack("<I", 2))  # version
+            f.write(struct.pack("<I", len(entries)))  # n_entries
 
             for key, lut in entries.items():
                 key_bytes = key.encode("ascii").ljust(16, b"\x00")[:16]
@@ -393,23 +379,19 @@ class PhotonicCompiler:
         luts: list[list[LUTEntry]],
         path: str,
     ) -> dict:
-        avg_mse = float(np.mean([
-            lut.mse_error
-            for layer_luts in luts
-            for lut in layer_luts
-        ]))
+        avg_mse = float(np.mean([lut.mse_error for layer_luts in luts for lut in layer_luts]))
         metadata = {
-            "version":         BUNDLE_VERSION,
-            "layer_sizes":     model.layer_sizes,
-            "activation":      model.activation_name,
-            "backend":         model.backend_mode,
-            "quantization":    self.quantization,
-            "n_lut_points":    self.n_lut_points,
-            "lut_x_range":     list(self.lut_x_range),
-            "n_edges":         graph.metadata["n_edges"],
-            "n_slots_used":    graph.n_slots_used,
-            "avg_lut_mse":     avg_mse,
-            "phase":           "2",
+            "version": BUNDLE_VERSION,
+            "layer_sizes": model.layer_sizes,
+            "activation": model.activation_name,
+            "backend": model.backend_mode,
+            "quantization": self.quantization,
+            "n_lut_points": self.n_lut_points,
+            "lut_x_range": list(self.lut_x_range),
+            "n_edges": graph.metadata["n_edges"],
+            "n_slots_used": graph.n_slots_used,
+            "avg_lut_mse": avg_mse,
+            "phase": "2",
             **model.estimate_ops(),
         }
         with open(os.path.join(path, "metadata.json"), "w") as f:
@@ -418,10 +400,10 @@ class PhotonicCompiler:
 
     def _write_manifest(self, path: str, metadata: dict) -> None:
         lines = [
-            f"PhotoKAN Bundle Manifest",
+            "PhotoKAN Bundle Manifest",
             f"version: {BUNDLE_VERSION}",
-            f"qpal_min_version: 1.0.0",
-            f"npu_required: false",
+            "qpal_min_version: 1.0.0",
+            "npu_required: false",
             f"n_edges: {metadata['n_edges']}",
             f"activation: {metadata['activation']}",
             f"quantization: {metadata['quantization']}",
@@ -435,6 +417,7 @@ class PhotonicCompiler:
 # LUT interpreter helpers
 # ---------------------------------------------------------------------------
 
+
 def _load_weights_bin(path: str) -> dict[str, dict]:
     """Parse weights.bin into a dict of {key: {values, scale, zero_point}}."""
     entries = {}
@@ -444,16 +427,16 @@ def _load_weights_bin(path: str) -> dict[str, dict]:
             raise PhotonicCompilerError(
                 f"Invalid weights.bin magic: {magic!r} (expected {WEIGHTS_MAGIC!r})"
             )
-        _version   = struct.unpack("<I", f.read(4))[0]
-        n_entries  = struct.unpack("<I", f.read(4))[0]
+        _version = struct.unpack("<I", f.read(4))[0]
+        n_entries = struct.unpack("<I", f.read(4))[0]
 
         for _ in range(n_entries):
-            key_raw    = f.read(16)
-            key        = key_raw.rstrip(b"\x00").decode("ascii")
-            n_points   = struct.unpack("<I", f.read(4))[0]
-            scale      = struct.unpack("<f", f.read(4))[0]
+            key_raw = f.read(16)
+            key = key_raw.rstrip(b"\x00").decode("ascii")
+            n_points = struct.unpack("<I", f.read(4))[0]
+            scale = struct.unpack("<f", f.read(4))[0]
             zero_point = struct.unpack("<i", f.read(4))[0]
-            values     = np.frombuffer(f.read(n_points), dtype=np.int8).copy()
+            values = np.frombuffer(f.read(n_points), dtype=np.int8).copy()
             entries[key] = {
                 "values": values,
                 "scale": scale,
@@ -473,19 +456,19 @@ def _lut_interpolate(x: torch.Tensor, lut_entry: dict) -> torch.Tensor:
     Returns:
         [batch] output values.
     """
-    values     = lut_entry["values"]
-    scale      = lut_entry["scale"]
+    values = lut_entry["values"]
+    scale = lut_entry["scale"]
     zero_point = lut_entry["zero_point"]
-    n          = len(values)
+    n = len(values)
 
     # Dequantise LUT
     y_lut = (values.astype(np.float32) - zero_point) * scale
-    y_t   = torch.tensor(y_lut, dtype=torch.float32)
+    y_t = torch.tensor(y_lut, dtype=torch.float32)
 
     # Map x to fractional LUT index (hardcoded x_range from bundle — Phase 2
     # stores this per-entry in metadata.json; here we use the graph's known range)
     # For robustness we clamp to [0, n-1]
-    x_np  = x.detach().float().numpy()
+    x_np = x.detach().float().numpy()
     # x_range stored in weights is not per-entry in this format yet;
     # the LUT is sampled over (-2, 2) by default
     x_min, x_max = -2.0, 2.0
@@ -494,9 +477,9 @@ def _lut_interpolate(x: torch.Tensor, lut_entry: dict) -> torch.Tensor:
 
     idx_lo = np.floor(idx_f).astype(int)
     idx_hi = np.minimum(idx_lo + 1, n - 1)
-    frac   = idx_f - idx_lo
+    frac = idx_f - idx_lo
 
-    y_lo   = y_t[idx_lo]
-    y_hi   = y_t[idx_hi]
+    y_lo = y_t[idx_lo]
+    y_hi = y_t[idx_hi]
     result = y_lo + torch.tensor(frac, dtype=torch.float32) * (y_hi - y_lo)
     return result

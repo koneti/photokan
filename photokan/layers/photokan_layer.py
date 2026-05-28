@@ -16,8 +16,9 @@ from __future__ import annotations
 import torch
 import torch.nn as nn
 
-from ..activations import get_activation_class, EdgeActivation
-from ..backend import apply_edge, resolve_backend
+from ..activations import EdgeActivation, get_activation_class
+from ..backend import apply_edge
+from ..backends import resolve_backend
 
 
 class PhotoKANLayer(nn.Module):
@@ -64,10 +65,12 @@ class PhotoKANLayer(nn.Module):
 
         # One activation per directed edge i→j
         ActivationClass = get_activation_class(activation)
-        self.edge_activations = nn.ModuleList([
-            ActivationClass(n_basis=n_basis, **activation_kwargs)
-            for _ in range(in_features * out_features)
-        ])
+        self.edge_activations = nn.ModuleList(
+            [
+                ActivationClass(n_basis=n_basis, **activation_kwargs)
+                for _ in range(in_features * out_features)
+            ]
+        )
 
     # ------------------------------------------------------------------
     # Helpers
@@ -126,9 +129,7 @@ class PhotoKANLayer(nn.Module):
 
     def parameter_count(self) -> dict:
         """Return a breakdown of trainable parameters."""
-        edge_params = sum(
-            p.numel() for p in self.edge_activations.parameters()
-        )
+        edge_params = sum(p.numel() for p in self.edge_activations.parameters())
         return {
             "edge_params": edge_params,
             "total": edge_params,

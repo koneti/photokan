@@ -2,26 +2,26 @@
 """KAN edge activation functions."""
 
 from .base import EdgeActivation
-from .sine_edge import SineEdgeActivation
 from .fourier_edge import FourierEdgeActivation
-from .spline_edge import SplineEdgeActivation
 from .relu_edge import ReLUEdgeActivation
+from .sine_edge import SineEdgeActivation
+from .spline_edge import SplineEdgeActivation
 
 __all__ = [
-    "EdgeActivation",
-    "SineEdgeActivation",
-    "FourierEdgeActivation",
-    "SplineEdgeActivation",
-    "ReLUEdgeActivation",
-    "get_activation_class",
     "ACTIVATION_REGISTRY",
+    "EdgeActivation",
+    "FourierEdgeActivation",
+    "ReLUEdgeActivation",
+    "SineEdgeActivation",
+    "SplineEdgeActivation",
+    "get_activation_class",
 ]
 
 ACTIVATION_REGISTRY: dict[str, type[EdgeActivation]] = {
-    "sine":    SineEdgeActivation,
+    "sine": SineEdgeActivation,
     "fourier": FourierEdgeActivation,
-    "spline":  SplineEdgeActivation,
-    "relu":    ReLUEdgeActivation,
+    "spline": SplineEdgeActivation,
+    "relu": ReLUEdgeActivation,
 }
 
 
@@ -41,7 +41,6 @@ def get_activation_class(name: str) -> type[EdgeActivation]:
     name = name.lower()
     if name not in ACTIVATION_REGISTRY:
         raise ValueError(
-            f"Unknown activation '{name}'. "
-            f"Choose from: {list(ACTIVATION_REGISTRY.keys())}"
+            f"Unknown activation '{name}'. Choose from: {list(ACTIVATION_REGISTRY.keys())}"
         )
     return ACTIVATION_REGISTRY[name]

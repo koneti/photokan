@@ -1,12 +1,12 @@
 """Tests for SineEdgeActivation."""
-import math
+
 import pytest
 import torch
+
 from photokan.activations import SineEdgeActivation
 
 
 class TestSineEdgeActivation:
-
     def test_output_shape_1d(self):
         act = SineEdgeActivation(n_basis=8)
         x = torch.randn(16)

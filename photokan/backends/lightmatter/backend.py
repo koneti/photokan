@@ -21,6 +21,7 @@ from ..base import PhotonicBackend
 # Attempt to import Lightmatter SDK
 try:
     import lightmatter as _lm  # type: ignore[import]
+
     _LM_AVAILABLE = True
 except ImportError:
     _lm = None
@@ -28,7 +29,6 @@ except ImportError:
 
 
 class LightmatterBackend(PhotonicBackend):
-
     @staticmethod
     def name() -> str:
         return "lightmatter"
@@ -61,9 +61,7 @@ class LightmatterBackend(PhotonicBackend):
     @staticmethod
     def execute(x: torch.Tensor, activation, op_type: str) -> torch.Tensor:
         if not LightmatterBackend.is_available():
-            raise RuntimeError(
-                "LightmatterBackend.execute called but hardware is not available."
-            )
+            raise RuntimeError("LightmatterBackend.execute called but hardware is not available.")
         params = {k: v.detach() for k, v in activation.named_parameters()}
         return _lm.optical_forward(x, params, op_type)
 

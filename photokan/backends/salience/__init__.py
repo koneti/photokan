@@ -1,7 +1,7 @@
 # photokan/backends/salience/__init__.py
 """Salience Labs vendor backend — auto-registers on import."""
 
-from .backend import SalienceBackend
 from ..registry import register_vendor
+from .backend import SalienceBackend
 
 register_vendor(SalienceBackend)

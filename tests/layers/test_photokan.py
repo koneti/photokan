@@ -1,11 +1,12 @@
 """Tests for PhotoKAN full model."""
-import torch
+
 import pytest
+import torch
+
 from photokan.layers import PhotoKAN
 
 
 class TestPhotoKAN:
-
     def _make_model(self, **kwargs):
         return PhotoKAN(
             layer_sizes=[4, 8, 4, 1],
@@ -65,8 +66,10 @@ class TestPhotoKAN:
 
     def test_compose_with_sequential(self):
         """PhotoKANLayer should compose with nn.Sequential."""
-        from photokan.layers import PhotoKANLayer
         import torch.nn as nn
+
+        from photokan.layers import PhotoKANLayer
+
         net = nn.Sequential(
             PhotoKANLayer(4, 8, backend="cpu", noise_sim=False, n_basis=4),
             PhotoKANLayer(8, 1, backend="cpu", noise_sim=False, n_basis=4),

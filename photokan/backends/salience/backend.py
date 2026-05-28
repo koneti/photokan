@@ -22,6 +22,7 @@ from ..base import PhotonicBackend
 # Attempt to import Salience SDK
 try:
     import salience as _sal  # type: ignore[import]
+
     _SAL_AVAILABLE = True
 except ImportError:
     _sal = None
@@ -29,7 +30,6 @@ except ImportError:
 
 
 class SalienceBackend(PhotonicBackend):
-
     @staticmethod
     def name() -> str:
         return "salience"
@@ -62,9 +62,7 @@ class SalienceBackend(PhotonicBackend):
     @staticmethod
     def execute(x: torch.Tensor, activation, op_type: str) -> torch.Tensor:
         if not SalienceBackend.is_available():
-            raise RuntimeError(
-                "SalienceBackend.execute called but hardware is not available."
-            )
+            raise RuntimeError("SalienceBackend.execute called but hardware is not available.")
         params = {k: v.detach() for k, v in activation.named_parameters()}
         return _sal.optical_forward(x, params, op_type)
 

@@ -6,11 +6,11 @@ Full PhotoKAN model — stacked PhotoKANLayers with training utilities.
 from __future__ import annotations
 
 from typing import Any
+
 import torch
 import torch.nn as nn
 
 from .photokan_layer import PhotoKANLayer
-from ..backend import available_backends
 
 
 class PhotoKAN(nn.Module):
@@ -43,25 +43,25 @@ class PhotoKAN(nn.Module):
         super().__init__()
 
         if len(layer_sizes) < 2:
-            raise ValueError(
-                "layer_sizes must have at least 2 elements (input and output)."
-            )
+            raise ValueError("layer_sizes must have at least 2 elements (input and output).")
 
         self.layer_sizes = layer_sizes
         self.activation_name = activation
         self.backend_mode = backend
         self.symbolic_mode = symbolic
 
-        self.layers = nn.ModuleList([
-            PhotoKANLayer(
-                in_features=layer_sizes[i],
-                out_features=layer_sizes[i + 1],
-                activation=activation,
-                backend=backend,
-                **layer_kwargs,
-            )
-            for i in range(len(layer_sizes) - 1)
-        ])
+        self.layers = nn.ModuleList(
+            [
+                PhotoKANLayer(
+                    in_features=layer_sizes[i],
+                    out_features=layer_sizes[i + 1],
+                    activation=activation,
+                    backend=backend,
+                    **layer_kwargs,
+                )
+                for i in range(len(layer_sizes) - 1)
+            ]
+        )
 
     # ------------------------------------------------------------------
     # Forward
@@ -79,10 +79,7 @@ class PhotoKAN(nn.Module):
     def parameter_count(self) -> dict:
         """Summarise parameter counts across all layers."""
         total = sum(p.numel() for p in self.parameters())
-        edge_total = sum(
-            layer.parameter_count()["edge_params"]
-            for layer in self.layers
-        )
+        edge_total = sum(layer.parameter_count()["edge_params"] for layer in self.layers)
         return {
             "total": total,
             "edge_params": edge_total,
@@ -97,18 +94,13 @@ class PhotoKAN(nn.Module):
         Based on published KAN benchmarks: ~43% fewer params,
         ~46% fewer ops vs equivalent MLP with same I/O dimensions.
         """
-        total_edges = sum(
-            layer.in_features * layer.out_features
-            for layer in self.layers
-        )
+        total_edges = sum(layer.in_features * layer.out_features for layer in self.layers)
         n_params = sum(p.numel() for p in self.parameters())
 
         # Equivalent MLP width ≈ average hidden width of this KAN
         hidden_widths = self.layer_sizes[1:-1]
         mlp_hidden = (
-            int(sum(hidden_widths) / len(hidden_widths))
-            if hidden_widths
-            else self.layer_sizes[-1]
+            int(sum(hidden_widths) / len(hidden_widths)) if hidden_widths else self.layer_sizes[-1]
         )
         mlp_layers = len(self.layers)
         mlp_params = (

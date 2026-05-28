@@ -1,15 +1,20 @@
-from .symbolic import symbolic_regress_activation
-from .visualization import plot_kan_graph, plot_activation_grid
-from .profiler import Profiler
-from .energy import estimate_layer_energy, estimate_model_energy, EnergyReport
-from .gradient_check import gradcheck_activation, gradcheck_layer, compare_backends
+from .energy import EnergyReport, estimate_layer_energy, estimate_model_energy
+from .gradient_check import compare_backends, gradcheck_activation, gradcheck_layer
 from .onnx_export import export_onnx
+from .profiler import Profiler
+from .symbolic import symbolic_regress_activation
+from .visualization import plot_activation_grid, plot_kan_graph
 
 __all__ = [
-    "symbolic_regress_activation",
-    "plot_kan_graph", "plot_activation_grid",
+    "EnergyReport",
     "Profiler",
-    "estimate_layer_energy", "estimate_model_energy", "EnergyReport",
-    "gradcheck_activation", "gradcheck_layer", "compare_backends",
+    "compare_backends",
+    "estimate_layer_energy",
+    "estimate_model_energy",
     "export_onnx",
+    "gradcheck_activation",
+    "gradcheck_layer",
+    "plot_activation_grid",
+    "plot_kan_graph",
+    "symbolic_regress_activation",
 ]

@@ -31,7 +31,7 @@ class ReLUEdgeActivation(EdgeActivation):
     def __init__(
         self,
         n_segments: int = 4,
-        n_basis: int | None = None,   # alias for n_segments
+        n_basis: int | None = None,  # alias for n_segments
         **kwargs,
     ):
         super().__init__()
@@ -52,9 +52,9 @@ class ReLUEdgeActivation(EdgeActivation):
         Returns:
             [...] same shape.
         """
-        x_exp = x.unsqueeze(-1)                             # [..., 1]
-        segments = torch.relu(self.a * x_exp + self.b)      # [..., n_segments]
-        return (self.w * segments).sum(dim=-1)              # [...]
+        x_exp = x.unsqueeze(-1)  # [..., 1]
+        segments = torch.relu(self.a * x_exp + self.b)  # [..., n_segments]
+        return (self.w * segments).sum(dim=-1)  # [...]
 
     def extra_repr(self) -> str:
         return f"n_segments={self.n_segments}"

@@ -8,8 +8,9 @@ implement this interface to integrate with the photokan dispatch layer.
 
 from __future__ import annotations
 
-import torch
 from abc import ABC, abstractmethod
+
+import torch
 
 
 class PhotonicBackend(ABC):

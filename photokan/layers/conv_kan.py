@@ -15,14 +15,15 @@ Each (C_in, C_out) pair shares one EdgeActivation, applied identically
 at every spatial position — the activation parameters are position-invariant,
 matching the translational equivariance of standard CNNs.
 """
+
 from __future__ import annotations
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ..activations import get_activation_class, EdgeActivation
-from ..backend import apply_edge, resolve_backend
+from ..activations import get_activation_class
+from ..backend import apply_edge
 
 
 class PhotoConvKAN(nn.Module):
@@ -58,12 +59,12 @@ class PhotoConvKAN(nn.Module):
     ):
         super().__init__()
 
-        self.in_channels  = in_channels
+        self.in_channels = in_channels
         self.out_channels = out_channels
-        self.kernel_size  = kernel_size
-        self.stride       = stride
-        self.padding      = padding
-        self.groups       = groups
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.groups = groups
         self.backend_mode = backend
 
         self.noise_config: dict | None = (
@@ -80,10 +81,12 @@ class PhotoConvKAN(nn.Module):
 
         ActivationClass = get_activation_class(activation)
         # [out_channels, n_in_weights] activations
-        self.edge_activations = nn.ModuleList([
-            ActivationClass(n_basis=n_basis, **activation_kwargs)
-            for _ in range(out_channels * n_in_weights)
-        ])
+        self.edge_activations = nn.ModuleList(
+            [
+                ActivationClass(n_basis=n_basis, **activation_kwargs)
+                for _ in range(out_channels * n_in_weights)
+            ]
+        )
 
         # Bias term per output channel
         self.bias = nn.Parameter(torch.zeros(out_channels))

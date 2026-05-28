@@ -1,7 +1,9 @@
 """Tests for LLM MLP replacement."""
+
 import pytest
 import torch
 import torch.nn as nn
+
 import photokan.llm as pkl
 from photokan.layers import PhotoKAN
 
@@ -9,10 +11,10 @@ from photokan.layers import PhotoKAN
 class _SimpleMLP(nn.Module):
     def __init__(self):
         super().__init__()
-        self.mlp = nn.Sequential(
-            nn.Linear(16, 32), nn.GELU(), nn.Linear(32, 16)
-        )
-    def forward(self, x): return x + self.mlp(x)
+        self.mlp = nn.Sequential(nn.Linear(16, 32), nn.GELU(), nn.Linear(32, 16))
+
+    def forward(self, x):
+        return x + self.mlp(x)
 
 
 class _SimpleTwoMLP(nn.Module):
@@ -20,11 +22,12 @@ class _SimpleTwoMLP(nn.Module):
         super().__init__()
         self.mlp0 = nn.Sequential(nn.Linear(8, 16), nn.GELU(), nn.Linear(16, 8))
         self.mlp1 = nn.Sequential(nn.Linear(8, 16), nn.GELU(), nn.Linear(16, 8))
-    def forward(self, x): return self.mlp1(self.mlp0(x))
+
+    def forward(self, x):
+        return self.mlp1(self.mlp0(x))
 
 
 class TestReplaceMLPWithPhotoKAN:
-
     def test_replaces_sequential_mlp(self):
         model = _SimpleTwoMLP()
         photo = pkl.replace_mlp_with_photokan(model, n_basis=4, noise_sim=False)

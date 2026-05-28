@@ -9,6 +9,7 @@ correct — essential before trusting training on real hardware.
 from __future__ import annotations
 
 from typing import Any
+
 import torch
 
 
@@ -39,10 +40,7 @@ def gradcheck_activation(
     activation_f64 = _to_float64(activation)
     param_names = [n for n, _ in activation_f64.named_parameters()]
     x_f64 = x.detach().double().requires_grad_(True)
-    params_f64 = [
-        p.detach().double().requires_grad_(True)
-        for p in activation_f64.parameters()
-    ]
+    params_f64 = [p.detach().double().requires_grad_(True) for p in activation_f64.parameters()]
 
     def fn(x_in, *params):
         # Use functional_call to pass params without mutating module state
@@ -90,7 +88,7 @@ def gradcheck_layer(
         x = torch.randn(3, layer.in_features, dtype=torch.float64) * 0.3
 
     layer = _to_float64(layer)
-    x_in  = x.detach().double().requires_grad_(True)
+    x_in = x.detach().double().requires_grad_(True)
 
     # Forward
     with torch.enable_grad():
@@ -98,31 +96,27 @@ def gradcheck_layer(
     grad_outputs = torch.ones_like(y)
 
     # Analytical gradient
-    grads_analytic = torch.autograd.grad(
-        y, x_in, grad_outputs=grad_outputs
-    )[0]
+    grads_analytic = torch.autograd.grad(y, x_in, grad_outputs=grad_outputs)[0]
 
     # Numerical gradient (finite differences)
     grads_numeric = torch.zeros_like(x_in)
     for i in range(x_in.numel()):
-        x_plus  = x_in.detach().clone()
+        x_plus = x_in.detach().clone()
         x_minus = x_in.detach().clone()
-        x_plus.view(-1)[i]  += eps
+        x_plus.view(-1)[i] += eps
         x_minus.view(-1)[i] -= eps
 
-        y_plus  = layer(x_plus.requires_grad_(False))
+        y_plus = layer(x_plus.requires_grad_(False))
         y_minus = layer(x_minus.requires_grad_(False))
-        grads_numeric.view(-1)[i] = (
-            (y_plus - y_minus) * grad_outputs
-        ).sum() / (2 * eps)
+        grads_numeric.view(-1)[i] = ((y_plus - y_minus) * grad_outputs).sum() / (2 * eps)
 
     max_err = (grads_analytic - grads_numeric).abs().max().item()
-    passed  = max_err <= atol
+    passed = max_err <= atol
 
     return {
-        "passed":     passed,
-        "max_err":    max_err,
-        "atol":       atol,
+        "passed": passed,
+        "max_err": max_err,
+        "atol": atol,
         "layer_info": layer.extra_repr(),
     }
 
@@ -143,7 +137,7 @@ def compare_backends(
     Returns:
         dict mapping backend name → output tensor, plus pairwise max_diff.
     """
-    from photokan.backend import available_backends, resolve_backend
+    from photokan.backends import available_backends
 
     if backends is None:
         backends = ["cpu"]
@@ -177,7 +171,7 @@ def compare_backends(
     keys = [k for k, v in outputs.items() if v is not None]
     diffs = {}
     for i, k1 in enumerate(keys):
-        for k2 in keys[i + 1:]:
+        for k2 in keys[i + 1 :]:
             diff = (outputs[k1] - outputs[k2]).abs().max().item()
             diffs[f"{k1}_vs_{k2}"] = diff
 

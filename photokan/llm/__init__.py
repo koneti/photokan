@@ -8,14 +8,15 @@ Provides tools to integrate PhotoKAN into transformer models:
   - compile_photokan_layers: AOT compile all KAN layers in a model
   - PhotoKANAttention: full KAN-based attention mechanism
 """
-from .replacer import replace_mlp_with_photokan, compile_photokan_layers
-from .adapters import add_photo_lora, PhotoLoRALinear
+
+from .adapters import PhotoLoRALinear, add_photo_lora
 from .attention import PhotoKANAttention
+from .replacer import compile_photokan_layers, replace_mlp_with_photokan
 
 __all__ = [
-    "replace_mlp_with_photokan",
-    "compile_photokan_layers",
-    "add_photo_lora",
-    "PhotoLoRALinear",
     "PhotoKANAttention",
+    "PhotoLoRALinear",
+    "add_photo_lora",
+    "compile_photokan_layers",
+    "replace_mlp_with_photokan",
 ]

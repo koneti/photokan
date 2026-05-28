@@ -3,9 +3,10 @@
 
 from __future__ import annotations
 
+from abc import ABC, abstractmethod
+
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
 
 
 class EdgeActivation(ABC, nn.Module):
@@ -53,10 +54,7 @@ class EdgeActivation(ABC, nn.Module):
             "x_range": x_range,
             "n_points": n_points,
             "activation": type(self).__name__,
-            "params": {
-                k: v.detach().numpy()
-                for k, v in self.named_parameters()
-            },
+            "params": {k: v.detach().numpy() for k, v in self.named_parameters()},
         }
 
     def extra_repr(self) -> str:

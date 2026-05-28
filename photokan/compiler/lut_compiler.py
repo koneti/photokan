@@ -13,7 +13,7 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-from ..backend.errors import PhotonicCompilerError
+from ..backends.errors import PhotonicCompilerError
 
 
 class LUTEntry:
@@ -29,13 +29,13 @@ class LUTEntry:
         activation_type: str,
         mse_error: float,
     ):
-        self.values_int8   = values_int8        # [n_points] int8
-        self.x_min         = x_min
-        self.x_max         = x_max
-        self.scale         = scale              # dequant: y = (q - zp) * scale
-        self.zero_point    = zero_point
+        self.values_int8 = values_int8  # [n_points] int8
+        self.x_min = x_min
+        self.x_max = x_max
+        self.scale = scale  # dequant: y = (q - zp) * scale
+        self.zero_point = zero_point
         self.activation_type = activation_type
-        self.mse_error     = mse_error          # reconstruction MSE
+        self.mse_error = mse_error  # reconstruction MSE
 
     def dequantise(self) -> np.ndarray:
         """Reconstruct float32 values from int8 LUT."""
@@ -43,13 +43,13 @@ class LUTEntry:
 
     def to_dict(self) -> dict:
         return {
-            "values_int8":     self.values_int8.tolist(),
-            "x_min":           self.x_min,
-            "x_max":           self.x_max,
-            "scale":           self.scale,
-            "zero_point":      self.zero_point,
+            "values_int8": self.values_int8.tolist(),
+            "x_min": self.x_min,
+            "x_max": self.x_max,
+            "scale": self.scale,
+            "zero_point": self.zero_point,
             "activation_type": self.activation_type,
-            "mse_error":       self.mse_error,
+            "mse_error": self.mse_error,
         }
 
 
@@ -71,12 +71,12 @@ class LUTCompiler:
         max_mse: float = 1e-4,
         bit_depth: int = 8,
     ):
-        self.n_points  = n_points
-        self.x_range   = x_range
-        self.max_mse   = max_mse
+        self.n_points = n_points
+        self.x_range = x_range
+        self.max_mse = max_mse
         self.bit_depth = bit_depth
-        self._q_min    = -(2 ** (bit_depth - 1))       # -128 for int8
-        self._q_max    = (2 ** (bit_depth - 1)) - 1    #  127 for int8
+        self._q_min = -(2 ** (bit_depth - 1))  # -128 for int8
+        self._q_max = (2 ** (bit_depth - 1)) - 1  #  127 for int8
 
     def compile_activation(
         self,
@@ -145,10 +145,7 @@ class LUTCompiler:
         Returns:
             List of LUTEntry in edge-index order.
         """
-        return [
-            self.compile_activation(act, validate=validate)
-            for act in layer.edge_activations
-        ]
+        return [self.compile_activation(act, validate=validate) for act in layer.edge_activations]
 
     def compile_model(
         self,
@@ -161,7 +158,4 @@ class LUTCompiler:
         Returns:
             List of lists: luts[layer_idx][edge_idx].
         """
-        return [
-            self.compile_layer(layer, validate=validate)
-            for layer in model.layers
-        ]
+        return [self.compile_layer(layer, validate=validate) for layer in model.layers]

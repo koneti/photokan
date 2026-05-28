@@ -1,30 +1,31 @@
 """Tests for PhotonicCompiler and PhotonicProgram."""
+
 import json
 import os
-import struct
 import tempfile
+
 import pytest
 import torch
+
 from photokan.compiler import PhotonicCompiler, PhotonicProgram
 from photokan.layers import PhotoKAN
-from photokan.backend.errors import PhotonicCompilerError
 
 
 def _trained_model():
     torch.manual_seed(0)
-    model = PhotoKAN([2, 4, 1], activation="sine", backend="cpu",
-                      noise_sim=False, n_basis=4)
+    model = PhotoKAN([2, 4, 1], activation="sine", backend="cpu", noise_sim=False, n_basis=4)
     x = torch.rand(32, 2)
     y = torch.sin(x[:, 0]) + x[:, 1] ** 2
     opt = torch.optim.Adam(model.parameters(), lr=1e-2)
     for _ in range(10):
         loss = torch.nn.functional.mse_loss(model(x).squeeze(), y)
-        opt.zero_grad(); loss.backward(); opt.step()
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
     return model
 
 
 class TestPhotonicCompiler:
-
     def test_compile_creates_bundle_files(self):
         model = _trained_model()
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -40,9 +41,7 @@ class TestPhotonicCompiler:
         model = _trained_model()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "model.npu")
-            PhotonicCompiler(n_lut_points=64, max_lut_mse=1e-2).compile(
-                model, path, validate=False
-            )
+            PhotonicCompiler(n_lut_points=64, max_lut_mse=1e-2).compile(model, path, validate=False)
             with open(os.path.join(path, "metadata.json")) as f:
                 meta = json.load(f)
             assert meta["layer_sizes"] == [2, 4, 1]
@@ -55,9 +54,7 @@ class TestPhotonicCompiler:
         model = _trained_model()
         with tempfile.TemporaryDirectory() as tmpdir:
             path = os.path.join(tmpdir, "model.npu")
-            PhotonicCompiler(n_lut_points=64, max_lut_mse=1e-2).compile(
-                model, path, validate=False
-            )
+            PhotonicCompiler(n_lut_points=64, max_lut_mse=1e-2).compile(model, path, validate=False)
             with open(os.path.join(path, "weights.bin"), "rb") as f:
                 magic = f.read(4)
             assert magic == b"PKAN"
@@ -81,14 +78,11 @@ class TestPhotonicCompiler:
 
 
 class TestPhotonicProgram:
-
     @pytest.fixture
     def bundle(self, tmp_path):
         model = _trained_model()
         path = str(tmp_path / "model.npu")
-        PhotonicCompiler(n_lut_points=64, max_lut_mse=1e-2).compile(
-            model, path, validate=False
-        )
+        PhotonicCompiler(n_lut_points=64, max_lut_mse=1e-2).compile(model, path, validate=False)
         return path
 
     def test_load_from_disk(self, bundle):
@@ -123,7 +117,7 @@ class TestPhotonicProgram:
                 model, path, validate=False
             )
             prog = PhotonicProgram.load(path)
-            x = torch.rand(32, 2) * 2 - 1   # within LUT range
+            x = torch.rand(32, 2) * 2 - 1  # within LUT range
             model.eval()
             with torch.no_grad():
                 y_model = model(x)

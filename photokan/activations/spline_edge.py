@@ -32,35 +32,31 @@ def _b_spline_basis(
     Returns:
         [..., n_basis] where n_basis = n_knots - order - 1.
     """
-    x = x.unsqueeze(-1)          # [..., 1]
+    x = x.unsqueeze(-1)  # [..., 1]
 
     # Order-0 (piecewise constant) basis
     basis = (x >= grid[:-1]) & (x < grid[1:])  # [..., n_knots-1]
     basis = basis.float()
 
     # Clamp last point to include right boundary
-    last_interval = (x == grid[-1])
+    last_interval = x == grid[-1]
     basis[..., -1] = basis[..., -1] + last_interval.squeeze(-1).float()
 
     # Cox-de Boor recursion
     for k in range(1, order + 1):
-        n = basis.shape[-1] - 1          # number of order-k bases
-        left_num  = x - grid[:n]         # [..., n]
-        left_den  = grid[k:k+n] - grid[:n]
-        right_num = grid[k+1:k+1+n] - x
-        right_den = grid[k+1:k+1+n] - grid[1:n+1]
+        n = basis.shape[-1] - 1  # number of order-k bases
+        left_num = x - grid[:n]  # [..., n]
+        left_den = grid[k : k + n] - grid[:n]
+        right_num = grid[k + 1 : k + 1 + n] - x
+        right_den = grid[k + 1 : k + 1 + n] - grid[1 : n + 1]
 
         # Safe division (avoid 0/0 → 0)
-        left  = torch.where(
-            left_den  != 0, left_num  / left_den,  torch.zeros_like(left_num)
-        )
-        right = torch.where(
-            right_den != 0, right_num / right_den, torch.zeros_like(right_num)
-        )
+        left = torch.where(left_den != 0, left_num / left_den, torch.zeros_like(left_num))
+        right = torch.where(right_den != 0, right_num / right_den, torch.zeros_like(right_num))
 
         basis = left * basis[..., :n] + right * basis[..., 1:]
 
-    return basis   # [..., n_basis]
+    return basis  # [..., n_basis]
 
 
 class SplineEdgeActivation(EdgeActivation):
@@ -82,7 +78,7 @@ class SplineEdgeActivation(EdgeActivation):
         grid_size: int = 5,
         spline_order: int = 3,
         grid_range: tuple[float, float] = (-1.0, 1.0),
-        n_basis: int | None = None,   # alias: overrides grid_size if set
+        n_basis: int | None = None,  # alias: overrides grid_size if set
         **kwargs,
     ):
         super().__init__()
@@ -121,13 +117,9 @@ class SplineEdgeActivation(EdgeActivation):
         # [..., n_coeff]
 
         spline_out = (basis * self.coefficients).sum(dim=-1)
-        residual   = self.residual_weight * torch.nn.functional.silu(x)
+        residual = self.residual_weight * torch.nn.functional.silu(x)
 
         return spline_out + residual
 
     def extra_repr(self) -> str:
-        return (
-            f"grid_size={self.grid_size}, "
-            f"order={self.spline_order}, "
-            f"range={self.grid_range}"
-        )
+        return f"grid_size={self.grid_size}, order={self.spline_order}, range={self.grid_range}"

@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import torch
 
-from ..backends.registry import get_backend, resolve_backend
 from ..backends.errors import PhotonicBackendError
+from ..backends.registry import get_backend, resolve_backend
 from .sim_backend import SimBackend
 
 
@@ -23,7 +23,6 @@ def _make_vendor_fn(vendor_backend, activation):
     """
 
     class _BoundVendorFunction(torch.autograd.Function):
-
         @staticmethod
         def forward(ctx, x: torch.Tensor, *param_tensors) -> torch.Tensor:
             ctx.save_for_backward(x, *param_tensors)

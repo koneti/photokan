@@ -1,12 +1,13 @@
 """Tests for FourierEdgeActivation."""
+
 import math
+
 import torch
-import pytest
+
 from photokan.activations import FourierEdgeActivation
 
 
 class TestFourierEdgeActivation:
-
     def test_output_shape(self):
         act = FourierEdgeActivation(n_freqs=6)
         x = torch.randn(32)

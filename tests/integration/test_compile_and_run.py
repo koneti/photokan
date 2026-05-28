@@ -2,12 +2,15 @@
 Integration: train a model, compile it, run via LUT interpreter,
 verify output fidelity end-to-end.
 """
+
 import os
 import tempfile
-import torch
+
 import pytest
-from photokan.layers import PhotoKAN
+import torch
+
 from photokan.compiler import PhotonicCompiler, PhotonicProgram
+from photokan.layers import PhotoKAN
 
 
 def _make_and_train(activation="sine", n_basis=6, epochs=100):
@@ -24,7 +27,9 @@ def _make_and_train(activation="sine", n_basis=6, epochs=100):
     opt = torch.optim.Adam(model.parameters(), lr=2e-3)
     for _ in range(epochs):
         loss = torch.nn.functional.mse_loss(model(x).squeeze(), y)
-        opt.zero_grad(); loss.backward(); opt.step()
+        opt.zero_grad()
+        loss.backward()
+        opt.step()
     return model
 
 
@@ -38,7 +43,7 @@ def test_compile_run_fidelity(activation):
         compiler = PhotonicCompiler(n_lut_points=256, max_lut_mse=1e-3)
         prog = compiler.compile(model, path, validate=False)
 
-        x = torch.rand(64, 2) * 1.5 - 0.75   # within LUT range
+        x = torch.rand(64, 2) * 1.5 - 0.75  # within LUT range
         model.eval()
         with torch.no_grad():
             y_model = model(x)
@@ -60,7 +65,7 @@ def test_bundle_survives_disk_roundtrip():
         prog_disk = PhotonicProgram.load(path)
 
         x = torch.rand(8, 2)
-        y_mem  = prog_mem.run(x, backend="cpu")
+        y_mem = prog_mem.run(x, backend="cpu")
         y_disk = prog_disk.run(x, backend="cpu")
 
         assert torch.allclose(y_mem, y_disk, atol=1e-5)

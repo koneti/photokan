@@ -13,8 +13,7 @@ when Q.PAL loads the .npu bundle via PhotonicProgram.run().
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field, asdict
-from typing import Any
+from dataclasses import asdict, dataclass, field
 
 from .lut_compiler import LUTEntry
 
@@ -22,33 +21,35 @@ from .lut_compiler import LUTEntry
 @dataclass
 class OpNode:
     """A single operation in the photonic execution graph."""
-    node_id:       str
-    op_type:       str          # Q.PAL op string e.g. 'sine_waveguide'
-    layer_idx:     int
-    edge_idx:      int
-    in_node:       int          # input feature index
-    out_node:      int          # output feature index
-    lut_ref:       str          # key into weights store
-    slot:          int = 0      # NPU execution slot
+
+    node_id: str
+    op_type: str  # Q.PAL op string e.g. 'sine_waveguide'
+    layer_idx: int
+    edge_idx: int
+    in_node: int  # input feature index
+    out_node: int  # output feature index
+    lut_ref: str  # key into weights store
+    slot: int = 0  # NPU execution slot
 
 
 @dataclass
 class ExecGraph:
     """Full photonic execution graph for a compiled model."""
-    nodes:          list[OpNode] = field(default_factory=list)
-    n_layers:       int = 0
-    layer_sizes:    list[int] = field(default_factory=list)
+
+    nodes: list[OpNode] = field(default_factory=list)
+    n_layers: int = 0
+    layer_sizes: list[int] = field(default_factory=list)
     activation_type: str = ""
-    n_slots_used:   int = 0
-    metadata:       dict = field(default_factory=dict)
+    n_slots_used: int = 0
+    metadata: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
-            "n_layers":       self.n_layers,
-            "layer_sizes":    self.layer_sizes,
+            "n_layers": self.n_layers,
+            "layer_sizes": self.layer_sizes,
             "activation_type": self.activation_type,
-            "n_slots_used":   self.n_slots_used,
-            "metadata":       self.metadata,
+            "n_slots_used": self.n_slots_used,
+            "metadata": self.metadata,
             "nodes": [asdict(n) for n in self.nodes],
         }
 
@@ -58,10 +59,10 @@ class ExecGraph:
 
 # Q.PAL op-type mapping (mirrors qpal_backend._OP_REGISTRY)
 _OP_TYPE_MAP: dict[str, str] = {
-    "SineEdgeActivation":    "sine_waveguide",
+    "SineEdgeActivation": "sine_waveguide",
     "FourierEdgeActivation": "fourier_waveguide",
-    "SplineEdgeActivation":  "spline_lut",
-    "ReLUEdgeActivation":    "relu_piecewise",
+    "SplineEdgeActivation": "spline_lut",
+    "ReLUEdgeActivation": "relu_piecewise",
 }
 
 
@@ -102,27 +103,27 @@ class QPALGraphBuilder:
         nodes: list[OpNode] = []
         slot_counter = 0
 
-        for l_idx, (layer, luts) in enumerate(
-            zip(model.layers, luts_per_layer)
-        ):
-            in_f  = layer.in_features
+        for l_idx, (layer, luts) in enumerate(zip(model.layers, luts_per_layer)):
+            in_f = layer.in_features
             out_f = layer.out_features
 
             for edge_idx, lut in enumerate(luts):
-                in_node  = edge_idx // out_f
+                in_node = edge_idx // out_f
                 out_node = edge_idx % out_f
-                lut_key  = f"L{l_idx}_E{edge_idx}"
+                lut_key = f"L{l_idx}_E{edge_idx}"
 
-                nodes.append(OpNode(
-                    node_id   = f"op_{l_idx}_{edge_idx}",
-                    op_type   = op_type,
-                    layer_idx = l_idx,
-                    edge_idx  = edge_idx,
-                    in_node   = in_node,
-                    out_node  = out_node,
-                    lut_ref   = lut_key,
-                    slot      = slot_counter % self.n_slots,
-                ))
+                nodes.append(
+                    OpNode(
+                        node_id=f"op_{l_idx}_{edge_idx}",
+                        op_type=op_type,
+                        layer_idx=l_idx,
+                        edge_idx=edge_idx,
+                        in_node=in_node,
+                        out_node=out_node,
+                        lut_ref=lut_key,
+                        slot=slot_counter % self.n_slots,
+                    )
+                )
                 slot_counter += 1
 
         return ExecGraph(
@@ -132,9 +133,9 @@ class QPALGraphBuilder:
             activation_type=activation_type,
             n_slots_used=min(slot_counter, self.n_slots),
             metadata={
-                "n_edges":     len(nodes),
-                "n_slots":     self.n_slots,
-                "builder":     "QPALGraphBuilder",
+                "n_edges": len(nodes),
+                "n_slots": self.n_slots,
+                "builder": "QPALGraphBuilder",
             },
         )
 
@@ -161,10 +162,7 @@ class QPALGraphBuilder:
             # Advance to next slot boundary for next layer (data locality)
             if slot % self.n_slots != 0:
                 slot = ((slot // self.n_slots) + 1) * self.n_slots
-                slot = min(slot, slot)   # don't overflow
+                slot = min(slot, slot)  # don't overflow
 
-        graph.n_slots_used = min(
-            max((n.slot for n in graph.nodes), default=0) + 1,
-            self.n_slots
-        )
+        graph.n_slots_used = min(max((n.slot for n in graph.nodes), default=0) + 1, self.n_slots)
         return graph

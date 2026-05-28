@@ -1,11 +1,11 @@
 """Tests for ReLUEdgeActivation."""
+
 import torch
-import pytest
+
 from photokan.activations import ReLUEdgeActivation
 
 
 class TestReLUEdgeActivation:
-
     def test_output_shape(self):
         act = ReLUEdgeActivation(n_segments=4)
         x = torch.randn(20)

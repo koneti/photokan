@@ -2,8 +2,10 @@
 Integration test: PhotoKAN learns a simple symbolic function.
 y = sin(x1) + x2^2 on CPU simulation.
 """
-import torch
+
 import pytest
+import torch
+
 from photokan.layers import PhotoKAN
 
 
@@ -34,9 +36,7 @@ def test_regression_converges():
 
     model.eval()
     with torch.no_grad():
-        test_loss = torch.nn.functional.mse_loss(
-            model(x_te).squeeze(), y_te
-        ).item()
+        test_loss = torch.nn.functional.mse_loss(model(x_te).squeeze(), y_te).item()
 
     # Should achieve reasonable fit in 200 steps
     assert test_loss < 1.0, f"Test MSE {test_loss:.4f} too high"

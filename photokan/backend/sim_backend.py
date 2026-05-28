@@ -33,7 +33,7 @@ class NoiseModel:
             return x
 
         # 1. Bit-depth quantisation (ADC model) with straight-through estimator
-        n_levels = 2 ** self.bit_depth
+        n_levels = 2**self.bit_depth
         x_range = x.max() - x.min() + 1e-8
         x_norm = (x - x.min()) / x_range * (n_levels - 1)
         x_quant = x_norm + (torch.round(x_norm) - x_norm).detach()
@@ -61,7 +61,12 @@ HARDWARE_PROFILES: dict[str, dict] = {
 }
 
 # Default noise config used when no explicit config is provided
-_DEFAULT_NOISE_CONFIG: dict = {"snr_db": 14.0, "bit_depth": 6, "phase_noise_rad": 0.01, "enabled": True}
+_DEFAULT_NOISE_CONFIG: dict = {
+    "snr_db": 14.0,
+    "bit_depth": 6,
+    "phase_noise_rad": 0.01,
+    "enabled": True,
+}
 
 
 class SimBackend:
@@ -83,8 +88,7 @@ class SimBackend:
         """Return a noise config dict for a named hardware profile ('npu1', 'npu2', 'ideal')."""
         if profile not in HARDWARE_PROFILES:
             raise ValueError(
-                f"Unknown profile '{profile}'. "
-                f"Choose from: {list(HARDWARE_PROFILES.keys())}"
+                f"Unknown profile '{profile}'. Choose from: {list(HARDWARE_PROFILES.keys())}"
             )
         return dict(HARDWARE_PROFILES[profile], enabled=True)
 
@@ -114,9 +118,13 @@ class SimBackend:
         return nm.apply(out)
 
     @classmethod
-    def get_transfer_function(cls, activation, n_points: int = 256,
-                               x_range: tuple = (-2.0, 2.0),
-                               noise_config: dict | None = None):
+    def get_transfer_function(
+        cls,
+        activation,
+        n_points: int = 256,
+        x_range: tuple = (-2.0, 2.0),
+        noise_config: dict | None = None,
+    ):
         """Return (x, y_ideal, y_noisy) for visualisation."""
         x = torch.linspace(x_range[0], x_range[1], n_points)
         with torch.no_grad():

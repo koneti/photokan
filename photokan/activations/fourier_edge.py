@@ -11,6 +11,7 @@ targets. Slightly higher parameter count.
 from __future__ import annotations
 
 import math
+
 import torch
 import torch.nn as nn
 
@@ -33,7 +34,7 @@ class FourierEdgeActivation(EdgeActivation):
         self,
         n_freqs: int = 8,
         period: float = 2 * math.pi,
-        n_basis: int | None = None,   # alias so layer factory works uniformly
+        n_basis: int | None = None,  # alias so layer factory works uniformly
         **kwargs,
     ):
         super().__init__()
@@ -49,9 +50,7 @@ class FourierEdgeActivation(EdgeActivation):
         self.b = nn.Parameter(torch.randn(n_freqs) * 0.1)  # sine coeffs
 
         # Pre-compute integer frequency indices (not trained)
-        self.register_buffer(
-            "k", torch.arange(1, n_freqs + 1, dtype=torch.float32)
-        )
+        self.register_buffer("k", torch.arange(1, n_freqs + 1, dtype=torch.float32))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -62,13 +61,11 @@ class FourierEdgeActivation(EdgeActivation):
             [...] same shape.
         """
         # Angular frequency: 2π·k / T
-        omega = 2 * math.pi * self.k / self.period         # [n_freqs]
-        x_exp = x.unsqueeze(-1)                            # [..., 1]
-        arg = omega * x_exp                                # [..., n_freqs]
+        omega = 2 * math.pi * self.k / self.period  # [n_freqs]
+        x_exp = x.unsqueeze(-1)  # [..., 1]
+        arg = omega * x_exp  # [..., n_freqs]
         out = (
-            self.a0
-            + (self.a * torch.cos(arg)).sum(dim=-1)
-            + (self.b * torch.sin(arg)).sum(dim=-1)
+            self.a0 + (self.a * torch.cos(arg)).sum(dim=-1) + (self.b * torch.sin(arg)).sum(dim=-1)
         )
         return out
 

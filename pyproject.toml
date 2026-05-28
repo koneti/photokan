@@ -4,10 +4,25 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "photokan"
-version = "0.4.0"
+version = "0.4.1"
 description = "Photonic KAN: Vendor-agnostic PyTorch + KAN framework for photonic AI hardware"
 readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Koneti"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = [
     "torch>=2.1.0",
     "numpy>=1.24",
@@ -16,13 +31,17 @@ dependencies = [
     "matplotlib>=3.7",
 ]
 
+[project.urls]
+Homepage = "https://photokan.dev"
+Repository = "https://github.com/koneti/photokan"
+
 [project.optional-dependencies]
 qant = ["qpal"]
 lightmatter = ["lightmatter"]
 salience = ["salience"]
 llm  = ["transformers>=4.40", "peft"]
 onnx = ["onnxscript", "onnxruntime"]
-dev  = ["pytest>=7.0", "pytest-cov", "black", "ruff"]
+dev  = ["pytest>=7.0", "pytest-cov", "black", "ruff", "mypy>=1.0"]
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -32,3 +51,47 @@ include = ["photokan*"]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
 markers = ["slow: mark test as slow", "npu: requires Q.ANT hardware"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+src = ["photokan", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "RUF",  # ruff-specific
+]
+ignore = [
+    "E501",  # line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["photokan"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*", "numpy.*", "scipy.*", "sympy.*", "matplotlib.*",
+    "qpal", "lightmatter", "salience",
+    "transformers.*", "peft.*", "onnxruntime.*", "onnxscript.*",
+]
+ignore_missing_imports = true

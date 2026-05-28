@@ -1,17 +1,19 @@
 """Tests for LUTCompiler."""
+
 import numpy as np
 import pytest
-import torch
-from photokan.compiler import LUTCompiler, LUTEntry
+
 from photokan.activations import (
-    SineEdgeActivation, FourierEdgeActivation,
-    SplineEdgeActivation, ReLUEdgeActivation,
+    FourierEdgeActivation,
+    ReLUEdgeActivation,
+    SineEdgeActivation,
+    SplineEdgeActivation,
 )
-from photokan.backend.errors import PhotonicCompilerError
+from photokan.backends.errors import PhotonicCompilerError
+from photokan.compiler import LUTCompiler, LUTEntry
 
 
 class TestLUTEntry:
-
     def _make_entry(self, n=64):
         act = SineEdgeActivation(n_basis=4)
         return LUTCompiler(n_points=n).compile_activation(act, validate=False)
@@ -32,8 +34,15 @@ class TestLUTEntry:
     def test_to_dict_keys(self):
         entry = self._make_entry()
         d = entry.to_dict()
-        for key in ("values_int8", "x_min", "x_max", "scale", "zero_point",
-                    "activation_type", "mse_error"):
+        for key in (
+            "values_int8",
+            "x_min",
+            "x_max",
+            "scale",
+            "zero_point",
+            "activation_type",
+            "mse_error",
+        ):
             assert key in d
 
     def test_mse_non_negative(self):
@@ -42,15 +51,19 @@ class TestLUTEntry:
 
 
 class TestLUTCompiler:
-
     @pytest.fixture
     def compiler(self):
         return LUTCompiler(n_points=128, x_range=(-2.0, 2.0), max_mse=1e-2)
 
-    @pytest.mark.parametrize("ActClass", [
-        SineEdgeActivation, FourierEdgeActivation,
-        SplineEdgeActivation, ReLUEdgeActivation,
-    ])
+    @pytest.mark.parametrize(
+        "ActClass",
+        [
+            SineEdgeActivation,
+            FourierEdgeActivation,
+            SplineEdgeActivation,
+            ReLUEdgeActivation,
+        ],
+    )
     def test_compile_activation_all_types(self, compiler, ActClass):
         act = ActClass(n_basis=4)
         entry = compiler.compile_activation(act, validate=False)
@@ -71,19 +84,19 @@ class TestLUTCompiler:
 
     def test_compile_layer(self, compiler):
         from photokan.layers import PhotoKANLayer
-        layer = PhotoKANLayer(3, 2, activation="sine", backend="cpu",
-                               noise_sim=False, n_basis=4)
+
+        layer = PhotoKANLayer(3, 2, activation="sine", backend="cpu", noise_sim=False, n_basis=4)
         luts = compiler.compile_layer(layer, validate=False)
-        assert len(luts) == 6   # 3 * 2 edges
+        assert len(luts) == 6  # 3 * 2 edges
 
     def test_compile_model(self, compiler):
         from photokan.layers import PhotoKAN
-        model = PhotoKAN([2, 4, 1], activation="sine", backend="cpu",
-                          noise_sim=False, n_basis=4)
+
+        model = PhotoKAN([2, 4, 1], activation="sine", backend="cpu", noise_sim=False, n_basis=4)
         luts = compiler.compile_model(model, validate=False)
-        assert len(luts) == 2       # 2 layers
-        assert len(luts[0]) == 8    # 2*4 edges
-        assert len(luts[1]) == 4    # 4*1 edges
+        assert len(luts) == 2  # 2 layers
+        assert len(luts[0]) == 8  # 2*4 edges
+        assert len(luts[1]) == 4  # 4*1 edges
 
     def test_scale_and_zp_valid(self, compiler):
         act = ReLUEdgeActivation(n_segments=4)
