@@ -304,4 +304,4 @@ pytest --cov=photokan           # with coverage
 
 ---
 
-*PhotoKAN v0.4.0 -- Build the bridge. Light does the math.*
+*PhotoKAN -- Build the bridge. Light does the math.*
