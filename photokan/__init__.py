@@ -31,7 +31,7 @@ from .utils import (
     plot_kan_graph,
 )
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 __all__ = [
     "PhotoConvKAN",

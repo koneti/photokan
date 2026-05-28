@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "photokan"
-version = "0.4.1"
+version = "0.4.2"
 description = "Photonic KAN: Vendor-agnostic PyTorch + KAN framework for photonic AI hardware"
 readme = "README.md"
 requires-python = ">=3.10"
